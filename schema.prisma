@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+}
+
+model PriceItem {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String    @default("")
+  price       Float
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  isExtra     Boolean   @default(false)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  date       String
+  timeSlot   String
+  clientName String
+  phone      String
+  email      String
+  carNumber  String
+  carBrand   String
+  categoryId String
+  category   PriceItem     @relation(fields: [categoryId], references: [id])
+  status     String        @default("pending")
+  notes      String        @default("")
+  source     String        @default("online")
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  lock       TimeSlotLock?
+
+  @@index([date, status])
+  @@index([phone])
+  @@index([carNumber])
+}
+
+model TimeSlotLock {
+  date      String
+  timeSlot  String
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@id([date, timeSlot])
+}
+
+model WorkingHours {
+  id           String @id @default(cuid())
+  weekday      Int    @unique
+  isOpen       Boolean @default(true)
+  startTime    String  @default("09:00")
+  endTime      String  @default("17:00")
+  breakStart   String  @default("12:30")
+  breakEnd     String  @default("13:30")
+  slotDuration Int     @default(20)
+}
+
+model ExtraClosure {
+  id        String  @id @default(cuid())
+  date      String
+  reason    String
+  allDay    Boolean @default(true)
+  startTime String?
+  endTime   String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label=""5@@8B>@8O AB0=F88">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fb7de"/>
+      <stop offset="100%" stop-color="#e8f1fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect y="620" width="1600" height="280" fill="#4d5d6b"/>
+  <rect x="180" y="360" width="820" height="280" rx="12" fill="#0e2a4a"/>
+  <rect x="210" y="400" width="240" height="140" fill="#d9e8f6"/>
+  <rect x="480" y="400" width="240" height="140" fill="#d9e8f6"/>
+  <rect x="750" y="400" width="210" height="140" fill="#1b487c"/>
+  <rect x="1080" y="430" width="220" height="190" rx="8" fill="#f0b429"/>
+  <text x="1190" y="535" text-anchor="middle" font-family="Arial" font-size="28" fill="#0e2a4a"></text>
+  <rect x="240" y="680" width="420" height="90" rx="45" fill="#c5d0da"/>
+  <circle cx="320" cy="770" r="28" fill="#1b3d67"/>
+  <circle cx="580" cy="770" r="28" fill="#1b3d67"/>
+  <text x="800" y="140" text-anchor="middle" font-family="Arial" font-size="42" fill="#0e2a4a">!  159 � =B>=>2A:0O, 9</text>
+</svg>
