@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ds159-postgres
+    environment:
+      POSTGRES_USER: ds159
+      POSTGRES_PASSWORD: ds159
+      POSTGRES_DB: ds159
+    ports:
+      - "5432:5432"
+    volumes:
+      - ds159_pg:/var/lib/postgresql/data
+
+volumes:
+  ds159_pg:
