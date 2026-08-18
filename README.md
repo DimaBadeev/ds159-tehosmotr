@@ -82,7 +82,7 @@ git push -u origin main
 | Region | Frankfurt (тот же, что у базы) |
 | Build Command | `npm ci && npx prisma generate && npm run build` |
 | Pre-Deploy Command | `npx prisma migrate deploy` (в Advanced) |
-| Start Command | `npm start` |
+| Start Command | `npm start` (создаёт таблицы и при пустой базе делает seed) |
 | Instance type | Free |
 
 3. В **Environment** добавьте:
