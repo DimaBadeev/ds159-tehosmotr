@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           ...(data.timeSlot ? { timeSlot: data.timeSlot } : {}),
           ...(data.clientName ? { clientName: data.clientName } : {}),
           ...(data.phone ? { phone: data.phone.replace(/\s+/g, "") } : {}),
-          ...(data.email ? { email: data.email.toLowerCase() } : {}),
+          ...(data.email !== undefined ? { email: data.email.toLowerCase() } : {}),
           ...(data.carNumber ? { carNumber: data.carNumber.toUpperCase() } : {}),
           ...(data.carBrand ? { carBrand: data.carBrand } : {}),
           ...(data.categoryId ? { categoryId: data.categoryId } : {}),

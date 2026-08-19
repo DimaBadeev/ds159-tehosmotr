@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
           timeSlot: data.timeSlot,
           clientName: data.clientName,
           phone: data.phone.replace(/\s+/g, ""),
-          email: data.email.toLowerCase(),
+          email: (data.email ?? "").toLowerCase(),
           carNumber: data.carNumber.toUpperCase(),
           carBrand: data.carBrand,
           categoryId: data.categoryId,

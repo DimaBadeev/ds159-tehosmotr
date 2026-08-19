@@ -35,7 +35,7 @@ export function Hero() {
             className="mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base"
           >
             {STATION.name}. Проводим государственный технический осмотр категорий M1, M2, M3,
-            N1, N2, N3, прицепов и мотоциклов — в том числе полноприводных автомобилей.
+            N1, N2, N3 и прицепов — в том числе полноприводных автомобилей.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}

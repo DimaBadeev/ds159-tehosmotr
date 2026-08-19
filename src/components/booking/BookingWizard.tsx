@@ -137,7 +137,6 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
     if (step === 3) {
       return (
         form.getValues("clientName").trim().length >= 3 &&
-        form.getValues("email").includes("@") &&
         form.getValues("carNumber").trim().length >= 4 &&
         form.getValues("carBrand").trim().length >= 2
       );
@@ -367,7 +366,7 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
                 <input className="input" {...form.register("phone")} placeholder="+375 29 123-45-67" />
               </label>
               <label>
-                <span className="label">Email</span>
+                <span className="label">Email <span className="font-normal text-slate-400">(необязательно)</span></span>
                 <input className="input" type="email" {...form.register("email")} placeholder="name@mail.by" />
               </label>
               <label>

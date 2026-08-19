@@ -4,9 +4,21 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 
+if (!process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL =
+    process.env.RENDER_EXTERNAL_URL ||
+    (process.env.RENDER_EXTERNAL_HOSTNAME
+      ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+      : "http://localhost:3000");
+}
+
 export const authOptions: NextAuthOptions = {
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    process.env.AUTH_SECRET ||
+    process.env.DATABASE_URL,
   session: { strategy: "jwt" },
-  pages: { signIn: "/admin/login" },
+  pages: { signIn: "/admin/login", error: "/admin/login" },
   providers: [
     CredentialsProvider({
       name: "credentials",

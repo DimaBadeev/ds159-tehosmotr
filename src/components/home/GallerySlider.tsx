@@ -46,9 +46,6 @@ export function GallerySlider() {
             </AnimatePresence>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-950/80 to-transparent p-5 sm:p-8">
               <p className="text-sm font-medium text-white sm:text-base">{slide.caption}</p>
-              <p className="mt-1 text-xs text-white/70">
-                Заглушка — замените файл в папке public/gallery
-              </p>
             </div>
           </div>
           <button

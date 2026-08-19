@@ -17,7 +17,15 @@ export const bookingFormSchema = z.object({
     .min(3, "Укажите ФИО")
     .max(120, "Слишком длинное ФИО"),
   phone: z.string().trim().regex(phoneRegex, "Телефон в формате +375 XX XXX-XX-XX"),
-  email: z.string().trim().email("Укажите корректный email"),
+  email: z
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .refine(
+      (value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      "Укажите корректный email",
+    ),
   carNumber: z
     .string()
     .trim()

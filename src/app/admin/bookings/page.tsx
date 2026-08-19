@@ -189,7 +189,7 @@ export default function AdminBookingsPage() {
           </select>
           <input className="input" placeholder="ФИО" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} required />
           <input className="input" placeholder="Телефон" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-          <input className="input" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+          <input className="input" placeholder="Email (необязательно)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <input className="input" placeholder="Гос. номер" value={form.carNumber} onChange={(e) => setForm({ ...form, carNumber: e.target.value })} required />
           <input className="input sm:col-span-2" placeholder="Марка / модель" value={form.carBrand} onChange={(e) => setForm({ ...form, carBrand: e.target.value })} required />
           <textarea className="input sm:col-span-2" placeholder="Заметка" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />

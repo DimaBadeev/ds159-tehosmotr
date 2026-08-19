@@ -8,7 +8,7 @@ import { BookingCta } from "@/components/home/BookingCta";
 export const metadata: Metadata = {
   title: "Услуги и цены",
   description:
-    "Цены на государственный технический осмотр по категориям M1, M2, M3, N1, N2, N3, прицепам и мотоциклам. Диагностическая станция № 159, Минск.",
+    "Цены на государственный технический осмотр по категориям M1, M2, M3, N1, N2, N3 и прицепам. Диагностическая станция № 159, Минск.",
 };
 
 export const dynamic = "force-dynamic";

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: `%s | ${STATION.shortName}`,
   },
   description:
-    "Государственный технический осмотр в Минске: запись онлайн, категории M1–M3, N1–N3, прицепы и мотоциклы. ул. Антоновская, 9.",
+    "Государственный технический осмотр в Минске: запись онлайн, категории M1–M3, N1–N3 и прицепы. ул. Антоновская, 9.",
   openGraph: {
     title: `${STATION.shortName} — техосмотр в Минске`,
     description: STATION.name,

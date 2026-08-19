@@ -14,7 +14,7 @@ import { STATION } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Главная",
-  description: `${STATION.name}: гостехосмотр в Минске на ул. Антоновская, 9. Онлайн-запись, ЕРИП, категории M, N, O и мотоциклы.`,
+  description: `${STATION.name}: гостехосмотр в Минске на ул. Антоновская, 9. Онлайн-запись, ЕРИП, категории M, N и прицепы.`,
 };
 
 export const dynamic = "force-dynamic";

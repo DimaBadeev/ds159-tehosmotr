@@ -1,17 +1,19 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { Logo } from "@/components/layout/Logo";
 import { Spinner } from "@/components/ui/Spinner";
 
-export function LoginForm() {
+function LoginFormInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@ds159.by");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const configError = searchParams.get("error") === "Configuration";
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -36,6 +38,12 @@ export function LoginForm() {
         <Logo />
         <h1 className="mt-6 text-2xl font-extrabold text-brand-900">Вход в админку</h1>
         <p className="mt-2 text-sm text-slate-500">Только для сотрудников диагностической станции.</p>
+        {configError ? (
+          <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+            На сервере не заданы NEXTAUTH_SECRET и NEXTAUTH_URL. После деплоя входа это исправляется автоматически.
+            Если ошибка осталась — добавьте эти переменные в Environment на Render и перезапустите сервис.
+          </p>
+        ) : null}
         <label className="mt-6 block">
           <span className="label">Email</span>
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -50,5 +58,13 @@ export function LoginForm() {
         </button>
       </form>
     </div>
+  );
+}
+
+export function LoginForm() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-950" />}>
+      <LoginFormInner />
+    </Suspense>
   );
 }

@@ -61,7 +61,9 @@ export default function AdminPricesPage() {
   return (
     <div>
       <h1 className="text-2xl font-extrabold text-brand-900">Цены</h1>
-      <p className="mt-1 text-sm text-slate-500">Изменения сразу отображаются на сайте.</p>
+      <p className="mt-1 text-sm text-slate-500">
+        Изменения сразу отображаются на сайте. Чтобы временно скрыть категорию (например мотоциклы), снимите «На сайте» и сохраните.
+      </p>
       <div className="mt-6 space-y-3">
         {items.map((item, index) => (
           <article key={item.id} className="rounded-2xl bg-white p-4 shadow-card">
@@ -113,14 +115,17 @@ export default function AdminPricesPage() {
                       setItems(next);
                     }}
                   />
-                  Активна
+                  На сайте
                 </label>
                 <button type="button" className="btn-navy" onClick={() => save(item)}>
                   Сохранить
                 </button>
               </div>
             </div>
-            <p className="mt-2 text-xs text-slate-400">Сейчас на сайте: {formatPrice(item.price)}</p>
+            <p className="mt-2 text-xs text-slate-400">
+              {formatPrice(item.price)}
+              {item.isActive ? "" : " · скрыто на сайте"}
+            </p>
           </article>
         ))}
       </div>

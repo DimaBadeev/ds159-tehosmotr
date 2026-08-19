@@ -9,7 +9,7 @@ export function About() {
         <SectionHeading
           eyebrow="О станции"
           title="Диагностика с государственной ответственностью"
-          description={`${STATION.legalName}. Станция проводит гостехосмотр легковых, грузовых, пассажирских транспортных средств, прицепов и мотоциклов.`}
+          description={`${STATION.legalName}. Станция проводит гостехосмотр легковых, грузовых, пассажирских транспортных средств и прицепов.`}
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <article className="card p-6 sm:p-8">
