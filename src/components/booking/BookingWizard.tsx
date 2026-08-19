@@ -79,6 +79,10 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
   const selectedCategoryId = form.watch("categoryId");
   const selectedDate = form.watch("date");
   const selectedTime = form.watch("timeSlot");
+  const clientName = form.watch("clientName") ?? "";
+  const phone = form.watch("phone") ?? "";
+  const carNumber = form.watch("carNumber") ?? "";
+  const carBrand = form.watch("carBrand") ?? "";
   const selectedCategory = categories.find((item) => item.id === selectedCategoryId);
 
   const monthKey = format(month, "yyyy-MM");
@@ -130,19 +134,20 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
   const leadingBlanks = (getDay(startOfMonth(month)) + 6) % 7;
   const today = getMinskYmd();
 
-  const canNext = () => {
-    if (step === 0) return Boolean(selectedCategoryId);
-    if (step === 1) return Boolean(selectedDate);
-    if (step === 2) return Boolean(selectedTime);
-    if (step === 3) {
-      return (
-        form.getValues("clientName").trim().length >= 3 &&
-        form.getValues("carNumber").trim().length >= 4 &&
-        form.getValues("carBrand").trim().length >= 2
-      );
-    }
-    return true;
-  };
+  const phoneDigits = phone.replace(/\D/g, "");
+  const canNext =
+    step === 0
+      ? Boolean(selectedCategoryId)
+      : step === 1
+        ? Boolean(selectedDate)
+        : step === 2
+          ? Boolean(selectedTime)
+          : step === 3
+            ? clientName.trim().length >= 3 &&
+              phoneDigits.length >= 12 &&
+              carNumber.trim().length >= 4 &&
+              carBrand.trim().length >= 2
+            : true;
 
   const submit = form.handleSubmit(async (values) => {
     setSubmitting(true);
@@ -379,6 +384,10 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
               </label>
               {form.formState.errors.phone ? (
                 <p className="sm:col-span-2 text-sm text-red-600">{form.formState.errors.phone.message}</p>
+              ) : phoneDigits.length < 12 ? (
+                <p className="sm:col-span-2 text-sm text-slate-500">
+                  Укажите телефон полностью, например +375 29 123-45-67. Email можно не заполнять.
+                </p>
               ) : null}
             </div>
           ) : null}
@@ -408,7 +417,7 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
           <button
             type="button"
             className="btn-navy"
-            disabled={!canNext()}
+            disabled={!canNext}
             onClick={() => setStep((value) => value + 1)}
           >
             Далее
