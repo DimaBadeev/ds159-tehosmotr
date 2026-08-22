@@ -1,11 +1,26 @@
 import { z } from "zod";
-
-const phoneRegex = /^\+?375[\s-]?\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
+import { CAR_BRANDS } from "@/lib/car-brands";
+import {
+  BY_PHONE_REGEX,
+  formatByPhone,
+  formatByPlate,
+  formatFullName,
+  validateByPhone,
+  validateByPlate,
+  validateCarBrand,
+  validateFullName,
+} from "@/lib/booking-rules";
 
 const hhmm = z
   .string()
   .transform((value) => value.slice(0, 5))
   .refine((value) => /^\d{2}:\d{2}$/.test(value), "Укажите время ЧЧ:ММ");
+
+const contactPhoneRegex = /^\+?375[\s-]?\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
+
+function issue(message: string) {
+  return { code: z.ZodIssueCode.custom, message } as const;
+}
 
 export const bookingFormSchema = z.object({
   categoryId: z.string().min(1, "Выберите категорию транспортного средства"),
@@ -13,10 +28,21 @@ export const bookingFormSchema = z.object({
   timeSlot: hhmm,
   clientName: z
     .string()
-    .trim()
-    .min(3, "Укажите ФИО")
-    .max(120, "Слишком длинное ФИО"),
-  phone: z.string().trim().regex(phoneRegex, "Телефон в формате +375 XX XXX-XX-XX"),
+    .transform((value) => formatFullName(value).trim())
+    .superRefine((value, ctx) => {
+      const error = validateFullName(value);
+      if (error) ctx.addIssue(issue(error));
+    }),
+  phone: z
+    .string()
+    .transform((value) => formatByPhone(value))
+    .superRefine((value, ctx) => {
+      const error = validateByPhone(value);
+      if (error) ctx.addIssue(issue(error));
+    })
+    .refine((value) => BY_PHONE_REGEX.test(value), {
+      message: "Телефон в формате +375 (29) 123-45-67, оператор 25, 29, 33 или 44",
+    }),
   email: z
     .string()
     .trim()
@@ -28,14 +54,18 @@ export const bookingFormSchema = z.object({
     ),
   carNumber: z
     .string()
-    .trim()
-    .min(4, "Укажите государственный номер")
-    .max(20, "Слишком длинный номер"),
+    .transform((value) => formatByPlate(value))
+    .superRefine((value, ctx) => {
+      const error = validateByPlate(value);
+      if (error) ctx.addIssue(issue(error));
+    }),
   carBrand: z
     .string()
     .trim()
-    .min(2, "Укажите марку и модель")
-    .max(80, "Слишком длинное название"),
+    .superRefine((value, ctx) => {
+      const error = validateCarBrand(value, CAR_BRANDS);
+      if (error) ctx.addIssue(issue(error));
+    }),
   notes: z.string().trim().max(500).optional().default(""),
 });
 
@@ -50,7 +80,7 @@ export const bookingStatusSchema = z.object({
 
 export const contactSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(120),
-  phone: z.string().trim().regex(phoneRegex, "Телефон в формате +375 XX XXX-XX-XX"),
+  phone: z.string().trim().regex(contactPhoneRegex, "Телефон в формате +375 XX XXX-XX-XX"),
   email: z.string().trim().email("Укажите корректный email"),
   message: z.string().trim().min(10, "Сообщение слишком короткое").max(2000),
 });

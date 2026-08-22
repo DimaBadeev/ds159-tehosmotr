@@ -26,11 +26,6 @@ export function Footer() {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link href="/admin/login" className="hover:text-white/80">
-                Вход для сотрудников
-              </Link>
-            </li>
           </ul>
         </div>
         <div className="space-y-3 text-sm text-white/80">

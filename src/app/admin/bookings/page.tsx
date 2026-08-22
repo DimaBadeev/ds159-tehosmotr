@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { BOOKING_STATUSES, formatRuDate } from "@/lib/utils";
 import { Spinner } from "@/components/ui/Spinner";
+import { CAR_BRANDS, OTHER_CAR_BRAND } from "@/lib/car-brands";
+import { formatByPhone, formatByPlate, formatFullName } from "@/lib/booking-rules";
 
 type Category = { id: string; name: string; code: string; isExtra: boolean };
 type Booking = {
@@ -26,7 +28,7 @@ const emptyForm = {
   date: "",
   timeSlot: "09:00",
   clientName: "",
-  phone: "+375",
+  phone: "+375 (",
   email: "",
   carNumber: "",
   carBrand: "",
@@ -43,6 +45,7 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Booking | null>(null);
   const [creating, setCreating] = useState(false);
+  const [otherBrand, setOtherBrand] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
   const load = async () => {
@@ -144,6 +147,7 @@ export default function AdminBookingsPage() {
           onClick={() => {
             setCreating(true);
             setEditing(null);
+            setOtherBrand(false);
             setForm({ ...emptyForm, categoryId: mainCategories[0]?.id ?? "" });
           }}
         >
@@ -187,15 +191,63 @@ export default function AdminBookingsPage() {
               </option>
             ))}
           </select>
-          <input className="input" placeholder="ФИО" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} required />
-          <input className="input" placeholder="Телефон" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+          <input
+            className="input"
+            placeholder="ФИО"
+            value={form.clientName}
+            onChange={(e) => setForm({ ...form, clientName: formatFullName(e.target.value) })}
+            required
+          />
+          <input
+            className="input"
+            placeholder="Телефон +375 (29) 123-45-67"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: formatByPhone(e.target.value) })}
+            required
+          />
           <input className="input" placeholder="Email (необязательно)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input className="input" placeholder="Гос. номер" value={form.carNumber} onChange={(e) => setForm({ ...form, carNumber: e.target.value })} required />
-          <input className="input sm:col-span-2" placeholder="Марка / модель" value={form.carBrand} onChange={(e) => setForm({ ...form, carBrand: e.target.value })} required />
+          <input
+            className="input uppercase"
+            placeholder="Гос. номер 1234 AB-7"
+            value={form.carNumber}
+            onChange={(e) => setForm({ ...form, carNumber: formatByPlate(e.target.value) })}
+            required
+          />
+          <select
+            className={`input ${otherBrand ? "" : "sm:col-span-2"}`}
+            value={otherBrand ? OTHER_CAR_BRAND : form.carBrand}
+            onChange={(e) => {
+              if (e.target.value === OTHER_CAR_BRAND) {
+                setOtherBrand(true);
+                setForm({ ...form, carBrand: "" });
+                return;
+              }
+              setOtherBrand(false);
+              setForm({ ...form, carBrand: e.target.value });
+            }}
+            required={!otherBrand}
+          >
+            <option value="">Марка автомобиля</option>
+            {CAR_BRANDS.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+            <option value={OTHER_CAR_BRAND}>{OTHER_CAR_BRAND}</option>
+          </select>
+          {otherBrand ? (
+            <input
+              className="input"
+              placeholder="Своя марка"
+              value={form.carBrand}
+              onChange={(e) => setForm({ ...form, carBrand: e.target.value })}
+              required
+            />
+          ) : null}
           <textarea className="input sm:col-span-2" placeholder="Заметка" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           <div className="sm:col-span-2 flex gap-2">
             <button type="submit" className="btn-navy">Сохранить</button>
-            <button type="button" className="btn border border-slate-200 bg-white" onClick={() => { setCreating(false); setEditing(null); }}>
+            <button type="button" className="btn border border-slate-200 bg-white" onClick={() => { setCreating(false); setEditing(null); setOtherBrand(false); }}>
               Отмена
             </button>
           </div>
@@ -220,6 +272,14 @@ export default function AdminBookingsPage() {
               </tr>
             </thead>
             <tbody>
+              {bookings.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-12 text-center text-sm text-slate-500">
+                    Пока нет записей. Список заполняется только заявками с сайта
+                    или записями, которые вы добавите вручную.
+                  </td>
+                </tr>
+              ) : null}
               {bookings.map((booking) => (
                 <tr key={booking.id} className="border-t border-slate-100">
                   <td className="px-3 py-3 whitespace-nowrap">
@@ -261,6 +321,7 @@ export default function AdminBookingsPage() {
                         onClick={() => {
                           setEditing(booking);
                           setCreating(false);
+                          setOtherBrand(!CAR_BRANDS.includes(booking.carBrand));
                           setForm({
                             categoryId: booking.categoryId,
                             date: booking.date,

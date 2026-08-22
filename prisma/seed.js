@@ -250,28 +250,23 @@ const workingHours = [
   { weekday: 6, isOpen: false, startTime: "09:00", endTime: "17:00", breakStart: "12:30", breakEnd: "13:30", slotDuration: 20 },
 ];
 
-function minskYmd(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Minsk",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
+const DEMO_BOOKING_NAMES = [
+  "Иванов Сергей Петрович",
+  "Козлова Анна Викторовна",
+  "Петров Дмитрий Олегович",
+  "Сидорова Мария Ивановна",
+];
 
-function addDays(ymd, days) {
-  const [y, m, d] = ymd.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d + days, 12, 0, 0));
-  return date.toISOString().slice(0, 10);
-}
-
-function nextWeekday(fromYmd, weekday) {
-  const [y, m, d] = fromYmd.split("-").map(Number);
-  const current = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  const currentWeekday = current.getUTCDay();
-  const delta = (weekday - currentWeekday + 7) % 7;
-  return addDays(fromYmd, delta === 0 ? 0 : delta);
-}
+const DEMO_BOOKING_PHONES = [
+  "+375291112233",
+  "+375297776655",
+  "+375333334455",
+  "+375441234567",
+  "+375 (29) 111-22-33",
+  "+375 (29) 777-66-55",
+  "+375 (33) 333-44-55",
+  "+375 (44) 123-45-67",
+];
 
 async function main() {
   const passwordHash = await bcrypt.hash("Admin159!", 12);
@@ -309,94 +304,18 @@ async function main() {
     });
   }
 
-  const m1 = await prisma.priceItem.findUnique({ where: { code: "M1" } });
-  const m14 = await prisma.priceItem.findUnique({ where: { code: "M1-4WD" } });
-  const n1 = await prisma.priceItem.findUnique({ where: { code: "N1" } });
-
-  if (!m1 || !m14 || !n1) {
-    throw new Error("Не удалось найти категории для тестовых записей");
-  }
-
-  const today = minskYmd();
-  const monday = nextWeekday(today, 1);
-  const tuesday = addDays(monday, 1);
-  const wednesday = addDays(monday, 2);
-
-  const samples = [
-    {
-      date: monday,
-      timeSlot: "09:00",
-      clientName: "Иванов Сергей Петрович",
-      phone: "+375291112233",
-      email: "ivanov@example.com",
-      carNumber: "1234 AB-7",
-      carBrand: "Volkswagen Tiguan",
-      categoryId: m14.id,
-      status: "confirmed",
-      source: "online",
+  const removed = await prisma.booking.deleteMany({
+    where: {
+      OR: [
+        { email: { endsWith: "@example.com" } },
+        { clientName: { in: DEMO_BOOKING_NAMES } },
+        { phone: { in: DEMO_BOOKING_PHONES } },
+      ],
     },
-    {
-      date: monday,
-      timeSlot: "10:20",
-      clientName: "Козлова Анна Викторовна",
-      phone: "+375297776655",
-      email: "kozlova@example.com",
-      carNumber: "5678 CD-7",
-      carBrand: "Toyota Corolla",
-      categoryId: m1.id,
-      status: "pending",
-      source: "online",
-    },
-    {
-      date: tuesday,
-      timeSlot: "11:00",
-      clientName: "Петров Дмитрий Олегович",
-      phone: "+375333334455",
-      email: "petrov@example.com",
-      carNumber: "9012 EF-5",
-      carBrand: "GAZ Gazelle Next",
-      categoryId: n1.id,
-      status: "confirmed",
-      source: "admin",
-      notes: "Запись по телефону",
-    },
-    {
-      date: wednesday,
-      timeSlot: "14:00",
-      clientName: "Сидорова Мария Ивановна",
-      phone: "+375441234567",
-      email: "sidorova@example.com",
-      carNumber: "3456 GH-7",
-      carBrand: "Skoda Octavia",
-      categoryId: m1.id,
-      status: "completed",
-      source: "online",
-    },
-  ];
-
-  for (const sample of samples) {
-    const existing = await prisma.booking.findFirst({
-      where: { date: sample.date, timeSlot: sample.timeSlot },
-    });
-    if (existing) continue;
-
-    const booking = await prisma.booking.create({ data: sample });
-    if (sample.status !== "cancelled") {
-      await prisma.timeSlotLock.upsert({
-        where: {
-          date_timeSlot: { date: sample.date, timeSlot: sample.timeSlot },
-        },
-        update: { bookingId: booking.id },
-        create: {
-          date: sample.date,
-          timeSlot: sample.timeSlot,
-          bookingId: booking.id,
-        },
-      });
-    }
-  }
+  });
 
   console.log("Seed completed.");
+  console.log(`Removed demo bookings: ${removed.count}`);
   console.log("Admin login: admin@ds159.by");
   console.log("Admin password: Admin159!");
 }

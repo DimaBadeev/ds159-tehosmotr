@@ -18,6 +18,17 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { bookingFormSchema, type BookingFormValues } from "@/lib/validations";
 import { formatPrice, formatRuDate, getMinskYmd } from "@/lib/utils";
 import { STATION, WHAT_TO_BRING } from "@/lib/constants";
+import { CAR_BRANDS, OTHER_CAR_BRAND } from "@/lib/car-brands";
+import {
+  formatByPhone,
+  formatByPlate,
+  formatFullName,
+  validateByPhone,
+  validateByPlate,
+  validateCarBrand,
+  validateFullName,
+  validateOptionalEmail,
+} from "@/lib/booking-rules";
 import { Spinner } from "@/components/ui/Spinner";
 
 type Price = {
@@ -47,6 +58,11 @@ type Confirmation = {
 
 const STEPS = ["Категория", "Дата", "Время", "Данные", "Подтверждение"];
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+}
+
 export function BookingWizard({ prices }: { prices: Price[] }) {
   const categories = prices.filter((item) => !item.isExtra);
   const [step, setStep] = useState(0);
@@ -61,14 +77,19 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
 
+  const [otherBrand, setOtherBrand] = useState(false);
+  const [detailsAttempted, setDetailsAttempted] = useState(false);
+
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
     defaultValues: {
       categoryId: "",
       date: "",
       timeSlot: "",
       clientName: "",
-      phone: "+375",
+      phone: "+375 (",
       email: "",
       carNumber: "",
       carBrand: "",
@@ -81,6 +102,7 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
   const selectedTime = form.watch("timeSlot");
   const clientName = form.watch("clientName") ?? "";
   const phone = form.watch("phone") ?? "";
+  const email = form.watch("email") ?? "";
   const carNumber = form.watch("carNumber") ?? "";
   const carBrand = form.watch("carBrand") ?? "";
   const selectedCategory = categories.find((item) => item.id === selectedCategoryId);
@@ -134,7 +156,13 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
   const leadingBlanks = (getDay(startOfMonth(month)) + 6) % 7;
   const today = getMinskYmd();
 
-  const phoneDigits = phone.replace(/\D/g, "");
+  const detailsValid =
+    !validateFullName(clientName) &&
+    !validateByPhone(phone) &&
+    !validateOptionalEmail(email) &&
+    !validateByPlate(carNumber) &&
+    !validateCarBrand(carBrand, CAR_BRANDS);
+
   const canNext =
     step === 0
       ? Boolean(selectedCategoryId)
@@ -143,11 +171,20 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
         : step === 2
           ? Boolean(selectedTime)
           : step === 3
-            ? clientName.trim().length >= 3 &&
-              phoneDigits.length >= 12 &&
-              carNumber.trim().length >= 4 &&
-              carBrand.trim().length >= 2
+            ? detailsValid
             : true;
+
+  const goNext = async () => {
+    if (step === 3) {
+      setDetailsAttempted(true);
+      const valid = await form.trigger(["clientName", "phone", "email", "carNumber", "carBrand"]);
+      if (!valid) return;
+    }
+    setStep((value) => value + 1);
+  };
+
+  const showError = (field: keyof BookingFormValues) =>
+    detailsAttempted || Boolean(form.formState.touchedFields[field]);
 
   const submit = form.handleSubmit(async (values) => {
     setSubmitting(true);
@@ -364,30 +401,166 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="sm:col-span-2">
                 <span className="label">ФИО</span>
-                <input className="input" {...form.register("clientName")} placeholder="Иванов Иван Иванович" />
+                <input
+                  className="input"
+                  autoComplete="name"
+                  placeholder="Иванов Иван"
+                  value={clientName}
+                  onBlur={() => {
+                    form.setValue("clientName", formatFullName(clientName).trim(), {
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                  onChange={(event) => {
+                    form.setValue("clientName", formatFullName(event.target.value), {
+                      shouldDirty: true,
+                      shouldValidate: showError("clientName"),
+                    });
+                  }}
+                />
+                <FieldError
+                  message={
+                    showError("clientName")
+                      ? form.formState.errors.clientName?.message ?? validateFullName(clientName) ?? undefined
+                      : undefined
+                  }
+                />
               </label>
               <label>
                 <span className="label">Телефон</span>
-                <input className="input" {...form.register("phone")} placeholder="+375 29 123-45-67" />
+                <input
+                  className="input"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+375 (29) 123-45-67"
+                  value={phone}
+                  onBlur={() => form.trigger("phone")}
+                  onChange={(event) => {
+                    form.setValue("phone", formatByPhone(event.target.value), {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: showError("phone"),
+                    });
+                  }}
+                />
+                <FieldError
+                  message={
+                    showError("phone")
+                      ? form.formState.errors.phone?.message ?? validateByPhone(phone) ?? undefined
+                      : undefined
+                  }
+                />
               </label>
               <label>
-                <span className="label">Email <span className="font-normal text-slate-400">(необязательно)</span></span>
-                <input className="input" type="email" {...form.register("email")} placeholder="name@mail.by" />
+                <span className="label">
+                  Email <span className="font-normal text-slate-400">(необязательно)</span>
+                </span>
+                <input
+                  className="input"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="name@mail.by"
+                  {...form.register("email")}
+                />
+                <FieldError message={showError("email") ? form.formState.errors.email?.message : undefined} />
               </label>
               <label>
                 <span className="label">Гос. номер</span>
-                <input className="input" {...form.register("carNumber")} placeholder="1234 AB-7" />
+                <input
+                  className="input uppercase"
+                  autoComplete="off"
+                  placeholder="1234 AB-7"
+                  value={carNumber}
+                  onBlur={() => form.trigger("carNumber")}
+                  onChange={(event) => {
+                    form.setValue("carNumber", formatByPlate(event.target.value), {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: showError("carNumber"),
+                    });
+                  }}
+                />
+                <FieldError
+                  message={
+                    showError("carNumber")
+                      ? form.formState.errors.carNumber?.message ?? validateByPlate(carNumber) ?? undefined
+                      : undefined
+                  }
+                />
               </label>
-              <label>
-                <span className="label">Марка и модель</span>
-                <input className="input" {...form.register("carBrand")} placeholder="Volkswagen Tiguan" />
+              <label className={otherBrand ? "" : "sm:col-span-2"}>
+                <span className="label">Марка автомобиля</span>
+                <select
+                  className="input"
+                  value={otherBrand ? OTHER_CAR_BRAND : carBrand}
+                  onBlur={() => form.trigger("carBrand")}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value === OTHER_CAR_BRAND) {
+                      setOtherBrand(true);
+                      form.setValue("carBrand", "", {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      });
+                      return;
+                    }
+                    setOtherBrand(false);
+                    form.setValue("carBrand", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                >
+                  <option value="">Выберите марку</option>
+                  {CAR_BRANDS.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                  <option value={OTHER_CAR_BRAND}>{OTHER_CAR_BRAND}</option>
+                </select>
+                {!otherBrand ? (
+                  <FieldError
+                    message={
+                      showError("carBrand")
+                        ? form.formState.errors.carBrand?.message ??
+                          validateCarBrand(carBrand, CAR_BRANDS) ??
+                          undefined
+                        : undefined
+                    }
+                  />
+                ) : null}
               </label>
-              {form.formState.errors.phone ? (
-                <p className="sm:col-span-2 text-sm text-red-600">{form.formState.errors.phone.message}</p>
-              ) : phoneDigits.length < 12 ? (
-                <p className="sm:col-span-2 text-sm text-slate-500">
-                  Укажите телефон полностью, например +375 29 123-45-67. Email можно не заполнять.
-                </p>
+              {otherBrand ? (
+                <label>
+                  <span className="label">Своя марка</span>
+                  <input
+                    className="input"
+                    placeholder="Укажите марку"
+                    value={carBrand}
+                    onBlur={() => form.trigger("carBrand")}
+                    onChange={(event) => {
+                      form.setValue("carBrand", event.target.value.replace(/\s+/g, " "), {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                  <FieldError
+                    message={
+                      showError("carBrand")
+                        ? form.formState.errors.carBrand?.message ??
+                          validateCarBrand(carBrand, CAR_BRANDS) ??
+                          undefined
+                        : undefined
+                    }
+                  />
+                </label>
               ) : null}
             </div>
           ) : null}
@@ -418,12 +591,12 @@ export function BookingWizard({ prices }: { prices: Price[] }) {
             type="button"
             className="btn-navy"
             disabled={!canNext}
-            onClick={() => setStep((value) => value + 1)}
+            onClick={goNext}
           >
             Далее
           </button>
         ) : (
-          <button type="button" className="btn-primary" onClick={submit} disabled={submitting}>
+          <button type="button" className="btn-primary" onClick={submit} disabled={submitting || !detailsValid}>
             {submitting ? <Spinner className="h-4 w-4" /> : null}
             Подтвердить запись
           </button>
